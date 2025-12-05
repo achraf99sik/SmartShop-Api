@@ -1,7 +1,9 @@
 package com.smartshop.api.service;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.smartshop.api.model.User;
 import com.smartshop.api.repository.UserRepository;
+import com.smartshop.api.util.PasswordUtil;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,12 +13,15 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordUtil passwordUtil;
 
     public User login(String username, String password, HttpSession session) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+                .orElseThrow(() -> new RuntimeException("Invalid username or password " + username));
 
-        if (!user.getPassword().equals(password)) {
+        BCrypt.Result result = passwordUtil.verify(password, user.getPassword());
+
+        if (!result.verified) {
             throw new RuntimeException("Invalid username or password");
         }
 
