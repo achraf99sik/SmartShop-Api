@@ -6,6 +6,8 @@ import com.smartshop.api.model.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(
         componentModel = "spring",
         uses = {OrderItemMapper.class}
@@ -25,4 +27,6 @@ public interface OrderMapper {
     Order toEntity(OrderRequestDTO dto);
     @Mapping(source = "client.id", target = "clientId")
     OrderResponseDTO toDTO(Order order);
+
+    List<OrderResponseDTO> toDTOList(List<Order> entities);
 }

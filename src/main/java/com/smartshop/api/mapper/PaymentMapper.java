@@ -6,6 +6,8 @@ import com.smartshop.api.model.Payment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
 
@@ -15,4 +17,5 @@ public interface PaymentMapper {
     Payment toEntity(PaymentRequestDTO dto);
 
     PaymentResponseDTO toDTO(Payment entity);
+    List<PaymentResponseDTO> toDTOList(List<Payment> entities);
 }
