@@ -7,6 +7,7 @@ import com.smartshop.api.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,5 +35,8 @@ public class PaymentService {
         orderRepository.save(order);
 
         return payment;
+    }
+    public List<Payment> getPaymentsByOrder(UUID orderId) {
+        return paymentRepository.findPaymentsByOrderId(orderId);
     }
 }
