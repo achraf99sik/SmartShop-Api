@@ -1,10 +1,12 @@
 package com.smartshop.api.service;
 
+import com.smartshop.api.dto.ProductRequestDTO;
 import com.smartshop.api.model.Product;
 import com.smartshop.api.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -12,6 +14,42 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepository productRepository;
+
+    public List<Product> getAllProducts() {
+        return productRepository.findByDeletedFalse();
+    }
+
+    public Product getProduct(UUID id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+    }
+
+    public Product createProduct(ProductRequestDTO dto) {
+        Product product = Product.builder()
+                .nom(dto.getNom())
+                .prixHT(dto.getPrixHT())
+                .stock(dto.getStock())
+                .deleted(false)
+                .build();
+
+        return productRepository.save(product);
+    }
+
+    public Product updateProduct(UUID id, ProductRequestDTO dto) {
+        Product product = getProduct(id);
+
+        product.setNom(dto.getNom());
+        product.setPrixHT(dto.getPrixHT());
+        product.setStock(dto.getStock());
+
+        return productRepository.save(product);
+    }
+
+    public void softDeleteProduct(UUID id) {
+        Product product = getProduct(id);
+        product.setDeleted(true);
+        productRepository.save(product);
+    }
 
     public Product checkStock(UUID productId, int qty) {
         Product product = productRepository.findById(productId)
