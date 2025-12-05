@@ -95,4 +95,12 @@ public class OrderService {
         order.setStatus(OrderStatus.CONFIRMED);
         return orderRepository.save(order);
     }
+
+    public Order getOrder(UUID id) {
+        return orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+    }
+
+    public List<Order> getOrdersByClient(UUID clientId) {
+        return orderRepository.findByClientId(clientId);
+    }
 }
