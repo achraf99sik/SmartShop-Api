@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,11 +22,8 @@ import java.util.UUID;
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private UUID id;
-
-    @ManyToOne(optional = false)
-    private Order order;
 
     private int numeroPaiement;
 
@@ -44,4 +43,9 @@ public class Payment {
     private String reference;
 
     private String banque;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
 }
