@@ -35,7 +35,7 @@ public class Payment {
 
     private LocalDate datePaiement;
 
-    private LocalDate dateEncaissement;
+    private LocalDate dateEncaissement = LocalDate.now();
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
