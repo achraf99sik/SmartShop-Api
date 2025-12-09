@@ -23,10 +23,18 @@ public class OrderController {
     public OrderResponseDTO createOrder(@RequestBody @Valid OrderRequestDTO dto) {
         return orderMapper.toDTO(orderService.createOrder(dto));
     }
+    @GetMapping
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderMapper.toDTOList(orderService.getOrders());
+    }
 
     @PutMapping("/{id}/confirm")
     public OrderResponseDTO confirmOrder(@PathVariable UUID id) {
         return orderMapper.toDTO(orderService.confirmOrder(id));
+    }
+    @PutMapping("/{id}/cancel")
+    public OrderResponseDTO cancelOrder(@PathVariable UUID id) {
+        return orderMapper.toDTO(orderService.cancelOrder(id));
     }
 
     @GetMapping("/{id}")

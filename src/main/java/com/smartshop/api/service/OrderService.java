@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,15 +57,19 @@ public class OrderService {
         Order saved = orderRepository.save(orderAfterDiscount);
 
         for (OrderItemRequestDTO itemReq : request.getItems()) {
+            Product product = productService.getProduct(itemReq.getProductId());
 
             OrderItem item = new OrderItem();
             item.setOrder(saved);
-
-            Product product = new Product();
-            product.setId(itemReq.getProductId());
             item.setProduct(product);
-
             item.setQuantity(itemReq.getQuantity());
+
+            double unitPrice = product.getPrixHT();
+            double totalLine = unitPrice * itemReq.getQuantity();
+
+            item.setUnitPriceHT(unitPrice);
+            item.setTotalLineHT(totalLine);
+
             orderItemRepository.save(item);
         }
 
@@ -108,6 +114,9 @@ public class OrderService {
         if (order.getMontantRestant() > 0) {
             throw new BusinessException("Order not fully paid");
         }
+        if (order.getStatus() == OrderStatus.CONFIRMED) {
+            throw new BusinessException("This order is already confirmed");
+        }
 
         List<OrderItem> items = orderItemRepository.findAllByOrderId(orderId);
 
@@ -125,15 +134,36 @@ public class OrderService {
         );
 
         client.setTier(newTier);
+
+        if (client.getFirstOrderDate() == null) {
+            client.setFirstOrderDate(LocalDateTime.now());
+        }
+        client.setLastOrderDate(LocalDateTime.now());
+
         clientRepository.save(client);
 
         order.setStatus(OrderStatus.CONFIRMED);
+        return orderRepository.save(order);
+    }
+    public Order cancelOrder(UUID orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with this id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.CONFIRMED) {
+            throw new BusinessException("This order is already confirmed");
+        }
+
+        order.setStatus(OrderStatus.CANCELED);
         return orderRepository.save(order);
     }
 
     public Order getOrder(UUID id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+    }
+    public List<Order> getOrders() {
+        return orderRepository.findAll();
     }
 
     public List<Order> getOrdersByClient(UUID clientId) {
