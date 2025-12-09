@@ -19,15 +19,15 @@ public class FidelityService {
 
     public CustomerTier recalcTier(int totalOrders, double totalSpent) {
 
-        if (totalOrders >= 20 || totalSpent >= 30000) {
+        if (totalOrders >= 20 || totalSpent >= 15000) {
             return CustomerTier.PLATINUM;
         }
 
-        if (totalOrders >= 10 || totalSpent >= 15000) {
+        if (totalOrders >= 10 || totalSpent >= 5000) {
             return CustomerTier.GOLD;
         }
 
-        if (totalOrders >= 5 || totalSpent >= 5000) {
+        if (totalOrders >= 5 || totalSpent >= 1000) {
             return CustomerTier.SILVER;
         }
 
