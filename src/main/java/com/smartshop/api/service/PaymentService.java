@@ -69,5 +69,10 @@ public class PaymentService {
         }
         return paymentRepository.findPaymentsByOrderId(orderId);
     }
+    public Payment changeStatus(UUID id, PaymentStatus status) {
+        Payment payment = paymentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Payment not found with this id: " + id));
+        payment.setStatus(status);
+        return paymentRepository.save(payment);
+    }
 }
 
