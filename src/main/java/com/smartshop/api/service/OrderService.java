@@ -4,6 +4,8 @@ import com.smartshop.api.dto.OrderItemRequestDTO;
 import com.smartshop.api.dto.OrderRequestDTO;
 import com.smartshop.api.enums.CustomerTier;
 import com.smartshop.api.enums.OrderStatus;
+import com.smartshop.api.exception.BusinessException;
+import com.smartshop.api.exception.ResourceNotFoundException;
 import com.smartshop.api.model.*;
 import com.smartshop.api.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +31,18 @@ public class OrderService {
 
         double subtotal = 0;
         for (OrderItemRequestDTO itemReq : request.getItems()) {
-            Product product = productService.checkStock(itemReq.getProductId(), itemReq.getQuantity());
+
+            Product product = productService.checkStock(
+                    itemReq.getProductId(),
+                    itemReq.getQuantity()
+            );
+
             subtotal += product.getPrixHT() * itemReq.getQuantity();
         }
 
         CustomerTier tier = client.getTier();
         double rate = fidelityService.getDiscountRate(tier);
+
         double afterDiscount = subtotal - (subtotal * rate);
 
         Order orderAfterDiscount = getOrder(request, afterDiscount, client);
@@ -42,9 +50,14 @@ public class OrderService {
         Order saved = orderRepository.save(orderAfterDiscount);
 
         for (OrderItemRequestDTO itemReq : request.getItems()) {
+
             OrderItem item = new OrderItem();
             item.setOrder(saved);
-            item.getProduct().setId(itemReq.getProductId());
+
+            Product product = new Product();
+            product.setId(itemReq.getProductId());
+            item.setProduct(product);
+
             item.setQuantity(itemReq.getQuantity());
             orderItemRepository.save(item);
         }
@@ -53,8 +66,12 @@ public class OrderService {
     }
 
     private static Order getOrder(OrderRequestDTO request, double afterDiscount, Client client) {
+
         double promoDiscount = 0;
-        if (request.getPromoCode() != null && request.getPromoCode().matches("^PROMO-\\d{4}$")) {
+        if (request.getPromoCode() != null) {
+            if (!request.getPromoCode().matches("^PROMO-\\d{4}$")) {
+                throw new BusinessException("Invalid promo code format");
+            }
             promoDiscount = afterDiscount * 0.05;
         }
 
@@ -72,11 +89,13 @@ public class OrderService {
     }
 
     public Order confirmOrder(UUID orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if (order.getMontantRestant() > 0)
-            throw new RuntimeException("Order not fully paid");
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getMontantRestant() > 0) {
+            throw new BusinessException("Order not fully paid");
+        }
 
         List<OrderItem> items = orderItemRepository.findAllByOrderId(orderId);
 
@@ -88,7 +107,11 @@ public class OrderService {
         client.setTotalOrders(client.getTotalOrders() + 1);
         client.setTotalSpent(client.getTotalSpent() + order.getTotalTTC());
 
-        CustomerTier newTier = fidelityService.recalcTier(client.getTotalOrders(), client.getTotalSpent());
+        CustomerTier newTier = fidelityService.recalcTier(
+                client.getTotalOrders(),
+                client.getTotalSpent()
+        );
+
         client.setTier(newTier);
         clientRepository.save(client);
 
@@ -97,10 +120,12 @@ public class OrderService {
     }
 
     public Order getOrder(UUID id) {
-        return orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
     }
 
     public List<Order> getOrdersByClient(UUID clientId) {
         return orderRepository.findByClientId(clientId);
     }
 }
+

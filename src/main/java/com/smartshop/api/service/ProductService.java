@@ -1,6 +1,8 @@
 package com.smartshop.api.service;
 
 import com.smartshop.api.dto.ProductRequestDTO;
+import com.smartshop.api.exception.BusinessException;
+import com.smartshop.api.exception.ResourceNotFoundException;
 import com.smartshop.api.model.Product;
 import com.smartshop.api.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ public class ProductService {
 
     public Product getProduct(UUID id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     public Product createProduct(ProductRequestDTO dto) {
@@ -53,10 +55,10 @@ public class ProductService {
 
     public Product checkStock(UUID productId, int qty) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
 
         if (product.getStock() < qty) {
-            throw new RuntimeException("Insufficient stock for product: " + product.getNom());
+            throw new BusinessException("Insufficient stock for product: " + product.getNom());
         }
 
         return product;
@@ -68,3 +70,4 @@ public class ProductService {
         productRepository.save(product);
     }
 }
+

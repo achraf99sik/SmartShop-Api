@@ -1,5 +1,8 @@
 package com.smartshop.api.service;
 
+import com.smartshop.api.enums.OrderStatus;
+import com.smartshop.api.exception.BusinessException;
+import com.smartshop.api.exception.ResourceNotFoundException;
 import com.smartshop.api.model.Order;
 import com.smartshop.api.model.Payment;
 import com.smartshop.api.repository.OrderRepository;
@@ -20,10 +23,14 @@ public class PaymentService {
     public Payment registerPayment(UUID orderId, double amount) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (amount <= 0) {
+            throw new BusinessException("Payment amount must be positive");
+        }
 
         if (amount > order.getMontantRestant()) {
-            throw new RuntimeException("Payment exceeds remaining balance");
+            throw new BusinessException("Payment exceeds remaining balance");
         }
 
         Payment payment = new Payment();
@@ -32,11 +39,21 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         order.setMontantRestant(order.getMontantRestant() - amount);
+
+        if (order.getMontantRestant() == 0) {
+            order.setStatus(OrderStatus.CONFIRMED);
+        }
+
         orderRepository.save(order);
 
         return payment;
     }
+
     public List<Payment> getPaymentsByOrder(UUID orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new ResourceNotFoundException("Order not found");
+        }
         return paymentRepository.findPaymentsByOrderId(orderId);
     }
 }
+

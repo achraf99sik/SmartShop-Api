@@ -1,6 +1,7 @@
 package com.smartshop.api.service;
 
 import com.smartshop.api.enums.CustomerTier;
+import com.smartshop.api.exception.ResourceNotFoundException;
 import com.smartshop.api.model.Client;
 import com.smartshop.api.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class ClientService {
 
     public Client getClient(UUID id) {
         return clientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with this id : " + id));
     }
 
     public void updateStats(Client client, double orderTotal) {

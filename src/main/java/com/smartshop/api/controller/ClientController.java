@@ -32,6 +32,10 @@ public class ClientController {
     public ClientResponseDTO update(@PathVariable UUID id, @RequestBody ClientRequestDTO dto) {
         return clientMapper.toDTO(clientAdminService.updateClient(id, dto));
     }
+    @GetMapping("/{id}")
+    public ClientResponseDTO get(@PathVariable UUID id) {
+        return clientMapper.toDTO(clientAdminService.getClient(id));
+    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable UUID id) {
