@@ -1,6 +1,8 @@
 package com.smartshop.api.service;
 
+import com.smartshop.api.dto.PaymentRequestDTO;
 import com.smartshop.api.enums.OrderStatus;
+import com.smartshop.api.enums.PaymentStatus;
 import com.smartshop.api.exception.BusinessException;
 import com.smartshop.api.exception.ResourceNotFoundException;
 import com.smartshop.api.model.Order;
@@ -20,7 +22,8 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
 
-    public Payment registerPayment(UUID orderId, double amount) {
+    public Payment registerPayment(UUID orderId, PaymentRequestDTO request) {
+        double amount = request.getMontant();
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
@@ -36,6 +39,11 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setMontant(amount);
+        payment.setStatus(PaymentStatus.EN_ATTENTE);
+        payment.setBanque(request.getBanque());
+        payment.setDatePaiement(request.getDatePaiement());
+        payment.setNumeroPaiement(generatePaymentNumber());
+        payment.setType(request.getType());
         paymentRepository.save(payment);
 
         order.setMontantRestant(order.getMontantRestant() - amount);
@@ -48,7 +56,13 @@ public class PaymentService {
 
         return payment;
     }
-
+    public int generatePaymentNumber() {
+        Integer lastNumber = paymentRepository.findMaxNumeroPaiement();
+        if (lastNumber == null) {
+            return 1;
+        }
+        return lastNumber + 1;
+    }
     public List<Payment> getPaymentsByOrder(UUID orderId) {
         if (!orderRepository.existsById(orderId)) {
             throw new ResourceNotFoundException("Order not found");
