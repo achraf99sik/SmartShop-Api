@@ -24,7 +24,7 @@ public class PaymentController {
             @PathVariable UUID orderId,
             @RequestBody @Valid PaymentRequestDTO dto
     ) {
-        return paymentMapper.toDTO(paymentService.registerPayment(orderId, dto.getMontant()));
+        return paymentMapper.toDTO(paymentService.registerPayment(orderId, dto));
     }
 
     @GetMapping
